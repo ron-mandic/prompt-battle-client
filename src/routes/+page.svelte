@@ -1,2 +1,11 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<script>
+	import { TEXT_H1 } from '$lib/ts/constants';
+</script>
+
+<h1 class="uppercase text-center w-full">{@html TEXT_H1}</h1>
+
+<style lang="scss">
+	h1 {
+		font-size: clamp(4rem, 12vw, 170px);
+	}
+</style>
