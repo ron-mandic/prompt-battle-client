@@ -32,6 +32,7 @@
 		user-select: none;
 		max-width: 1920px;
 		gap: var(--gap);
+		z-index: 999;
 
 		&.pos-top {
 			top: 0;
@@ -65,6 +66,18 @@
 		font-style: normal;
 		font-weight: 800;
 		line-height: normal;
+	}
+
+	@media (min-width: 1921px) {
+		.marquee::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-image: linear-gradient(to right, #000, transparent, #000);
+		}
 	}
 
 	@keyframes scroll-left {

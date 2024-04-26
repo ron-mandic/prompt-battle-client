@@ -16,4 +16,23 @@
 	//
 	// If you want to overwrite includes/excludes, make sure to copy over the relevant includes/excludes
 	// from the referenced tsconfig.json - TypeScript does not merge them in
+
+	// Vite
+	// "useDefineForClassFields": true,
+	// "module": "ESNext",
+	// "lib": ["ES2020", "DOM", "DOM.Iterable"],
+	// "skipLibCheck": true,
+
+	// /* Bundler mode */
+	// "moduleResolution": "bundler",
+	// "allowImportingTsExtensions": true,
+	// "resolveJsonModule": true,
+	// "isolatedModules": true,
+	// "noEmit": true,
+
+	// /* Linting */
+	// "strict": true,
+	// "noUnusedLocals": true,
+	// "noUnusedParameters": true,
+	// "noFallthroughCasesInSwitch": true
 }
