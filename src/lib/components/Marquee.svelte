@@ -33,6 +33,11 @@
 		max-width: 1920px;
 		gap: var(--gap);
 		z-index: 999;
+		transition: opacity 5s cubic-bezier(0.77, 0, 0.175, 1);
+
+		&.fade {
+			opacity: 0.175;
+		}
 
 		&.pos-top {
 			top: 0;

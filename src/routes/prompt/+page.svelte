@@ -33,6 +33,9 @@
 		refTextarea.focus();
 		setTimeout(() => {
 			timer.start();
+			document.querySelectorAll('.marquee').forEach((marquee) => {
+				marquee.classList.add('fade');
+			});
 		}, 1500);
 	}}
 />
