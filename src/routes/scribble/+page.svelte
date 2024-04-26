@@ -4,132 +4,24 @@
 	import { timer, time, isComplete } from '$lib/stores/timer-scribble';
 	import Counter from '$lib/components/Counter.svelte';
 	import P5 from 'p5-svelte';
-	import type { Sketch } from '$lib/types';
-	import { Simple1111Api } from '$lib/api/auto1111';
+	import { generateImage, sketch } from '$lib/ts/functions';
 
 	let interval: number;
 	let isTriggered = false;
 
 	let initiated = false;
+	let completed = false;
 	let id: string;
 	let prompt: string;
 	let name: string;
 
-	let video;
-	let predictions = [];
-	let canvas;
-	let auto1111;
-	let state = 'showCanvas';
-	let myInput;
-	let autoImgReady = false;
-	let res = 512;
-
-	const sketch: Sketch = (p5) => {
-		p5.setup = () => {
-			p5.createCanvas(res, res);
-			p5.frameRate(60);
-
-			//Communication to Automatic1111
-			auto1111 = new Simple1111Api(
-				p5,
-				'https://companion-noble-diving-introducing.trycloudflare.com/'
-			);
-
-			auto1111.getControlnetInfo();
-
-			canvas = p5.createGraphics(p5.width, p5.height);
-			canvas.clear();
-			canvas.background(0);
-
-			// UI elemets
-			myInput = p5.createInput('Type your prompt here ...');
-			myInput.position(0, p5.height);
-			myInput.size(p5.width);
-			print(myInput);
-
-			myInput.height = 25;
-
-			// Button for generating the image
-			let GenerateImagebutton = p5.createButton('Generate Image');
-			GenerateImagebutton.position(0, p5.height + myInput.height); // set the x y position of the Button -> button.position(x,y);
-			GenerateImagebutton.mousePressed(generateImage); // Which function to be called if clicked
-
-			// Button to show the canvas again
-			let togglebutton = p5.createButton('Show Canvas');
-			togglebutton.position(GenerateImagebutton.width, p5.height + myInput.height);
-			togglebutton.mousePressed(toggleCanvas);
-
-			// Button to clear the canvas for a new drawing
-			let clearCanvasbutton = p5.createButton('Clear Canvas');
-			clearCanvasbutton.position(
-				GenerateImagebutton.width + togglebutton.width,
-				p5.height + myInput.height
-			);
-			clearCanvasbutton.mousePressed(clearCanvas);
-		};
-
-		p5.draw = () => {
-			switch (state) {
-				// Zeichnen Modus:
-				case 'showCanvas':
-					// Zeichne auf einem seperaten Canvas ellipse -> für Controlnet als Inputbild
-					if (p5.mouseIsPressed) {
-						canvas.fill(255);
-						canvas.strokeWeight(5);
-						canvas.stroke(255);
-						//canvas.ellipse(mouseX, mouseY, 10, 10);
-						canvas.line(p5.mouseX, p5.mouseY, p5.pmouseX, p5.pmouseY);
-					}
-
-					p5.image(canvas, 0, 0);
-
-					// Zeige die Position der Maus aus dem Canvas
-					p5.fill(128);
-					p5.noStroke();
-					p5.ellipse(p5.mouseX, p5.mouseY, 10, 10);
-					break;
-
-				// Zeige Generiertes Bild Modus:
-				case 'showImage':
-					if (auto1111.img) {
-						if (auto1111.isProcessing) {
-							infoText();
-						} else {
-							p5.image(auto1111.img, 0, 0, res, res);
-						}
-					}
-					break;
-			}
-		};
-
-		function infoText() {
-			// Infotext so you know that Stable Diffusion is doing somthing
-			p5.noStroke();
-			p5.fill(255, 255, 0);
-			p5.rect(15, p5.height / 2 - 13, 200, 20);
-			p5.fill(0);
-			p5.text('generating Image please wait ...', 20, p5.height / 2);
-		}
-
-		function generateImage() {
-			// read the prompt from the inputfield
-			let prompt = myInput.value();
-			// auto1111.txtToImg("prompt", ImageForControlnet, "TpyeOfControlnet")
-			auto1111.txtToImg(prompt, canvas, 'control_v11p_sd15_scribble [d4ba51ff]');
-			// switch the state to show the final generated image
-			state = 'showImage';
-		}
-
-		function toggleCanvas() {
-			// switch the state to show the Canvas
-			state = 'showCanvas';
-		}
-
-		function clearCanvas() {
-			canvas.clear();
-			canvas.background(0);
-		}
-	};
+	$: if ($isComplete) {
+		setTimeout(() => {
+			$isComplete = false;
+			completed = true;
+			generateImage();
+		}, 2000);
+	}
 
 	onMount(() => {
 		id = $page.url.searchParams.get('id')!;
@@ -163,13 +55,21 @@
 		<p>{prompt}</p>
 		<div class="absolute left-0 bottom-0">Prompt</div>
 	</div>
-	<div id="canvas" class="relative flex justify-center items-end" class:jello={isTriggered}>
+	<div
+		id="canvas"
+		class="relative flex justify-center items-end"
+		class:completed
+		class:jello={isTriggered && !completed}
+	>
 		<P5 {sketch} />
 	</div>
 	<div id="prompt-footer" class="flex justify-between items-end">
 		<div id="prompt-clock" class="flex flex-col justify-center">
 			<p>time remaining:</p>
-			<p class:completing={+$time.slice(3) <= 10 && $time[1] !== '1'} class:complete={$isComplete}>
+			<p
+				class:completing={+$time.slice(3) <= 10 && $time[1] !== '1'}
+				class:complete={$isComplete || completed}
+			>
 				{$time}
 			</p>
 		</div>
@@ -245,6 +145,11 @@
 
 		&.jello::after {
 			animation: jello 1s ease-in-out;
+		}
+
+		&.completed::after {
+			animation: none !important;
+			display: none;
 		}
 
 		&::after {

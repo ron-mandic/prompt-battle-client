@@ -1,6 +1,6 @@
 // TODO: Resolve type errors
 
-export class Simple1111Api {
+export class Automatic1111 {
 	constructor(p5, _url) {
 		this.auto1111Url = _url;
 		this.isProcessing = false;
@@ -64,6 +64,7 @@ export class Simple1111Api {
 
 			let genImage = await this.p5.httpPost(url, 'json', payload);
 			this.img = this.p5.loadImage('data:image/png;base64,' + genImage.images[0]);
+			console.log(genImage.images);
 			this.isProcessing = false;
 		} else {
 			console.log('Need at least a promt ...');
