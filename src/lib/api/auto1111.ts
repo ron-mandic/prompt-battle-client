@@ -1,13 +1,16 @@
-class Simple1111Api {
-	constructor(_url) {
+// TODO: Resolve type errors
+
+export class Simple1111Api {
+	constructor(p5, _url) {
 		this.auto1111Url = _url;
 		this.isProcessing = false;
 		this.model_list;
 		this.modelNumber = 0;
 		this.res = 512;
+		this.p5 = p5;
 
-		this.img = createImage(this.res, this.res);
-		this.cimg = createImage(this.res, this.res);
+		this.img = p5.createImage(this.res, this.res);
+		this.cimg = p5.createImage(this.res, this.res);
 		this.txt = 'No Clip generated yet ...';
 		this.isReady = false;
 	}
@@ -59,8 +62,8 @@ class Simple1111Api {
 				console.log('Proceeding without Controlnet Image and a Controlnet Model ...');
 			}
 
-			let genImage = await httpPost(url, 'json', payload);
-			this.img = loadImage('data:image/png;base64,' + genImage.images[0]);
+			let genImage = await this.p5.httpPost(url, 'json', payload);
+			this.img = this.p5.loadImage('data:image/png;base64,' + genImage.images[0]);
 			this.isProcessing = false;
 		} else {
 			console.log('Need at least a promt ...');
@@ -83,7 +86,7 @@ class Simple1111Api {
 				image: img.canvas.toDataURL(),
 				model: 'clip'
 			};
-			let t = await httpPost(url, 'json', payload);
+			let t = await this.p5.httpPost(url, 'json', payload);
 			this.txt = t.caption;
 			console.log(this.txt);
 			this.isProcessing = false;
@@ -122,8 +125,12 @@ class Simple1111Api {
 				controlnet_input_images: [img.canvas.toDataURL().toString()]
 			};
 			console.log(payload);
-			let i = await httpPost(this.auto1111Url + 'controlnet/detect', 'application/json', payload);
-			this.cimg = loadImage('data:image/png;base64,' + JSON.parse(i).images[0]);
+			let i = await this.p5.httpPost(
+				this.auto1111Url + 'controlnet/detect',
+				'application/json',
+				payload
+			);
+			this.cimg = this.p5.loadImage('data:image/png;base64,' + JSON.parse(i).images[0]);
 			this.isProcessing = false;
 		} else {
 			console.log('Need an Image, Controlnet Type and Controlnet Model');
@@ -134,7 +141,7 @@ class Simple1111Api {
 		let url = this.auto1111Url + 'controlnet/model_list';
 		let list;
 		let test = false;
-		list = await httpGet(
+		list = await this.p5.httpGet(
 			url,
 			'json',
 			false,

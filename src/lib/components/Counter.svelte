@@ -52,6 +52,7 @@
 		line-height: normal;
 		border: 2px solid #6eebea;
 		background: #1c1f22;
+		user-select: none;
 		z-index: 998;
 
 		span.starting {
@@ -67,7 +68,6 @@
 		height: 100vh;
 		background: rgba(0, 0, 0, 0.75);
 		z-index: 997;
-		pointer-events: auto;
 	}
 
 	@keyframes flash {

@@ -129,6 +129,7 @@
 		flex-shrink: 0;
 		background-color: transparent;
 		z-index: 100;
+		user-select: none;
 	}
 
 	#prompt-clock {
