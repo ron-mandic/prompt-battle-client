@@ -27,6 +27,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Prompt by {name}</title>
+</svelte:head>
+
 <Counter
 	onEnd={() => {
 		initiated = true;
@@ -45,6 +49,7 @@
 		name="prompt"
 		class="relative w-full h-full focus:outline-none p-6"
 		maxlength="75"
+		autocorrect="off"
 		bind:this={refTextarea}
 		bind:value
 	/>

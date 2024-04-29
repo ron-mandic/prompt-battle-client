@@ -4,7 +4,10 @@
 	import { timer, time, isComplete } from '$lib/stores/timer-scribble';
 	import Counter from '$lib/components/Counter.svelte';
 	import P5 from 'p5-svelte';
-	import { generateImage, sketch } from '$lib/ts/functions';
+	import { generateImages, sketch } from '$lib/ts/functions';
+	import { auto1111Process } from '$lib/stores/auto1111-process';
+	import { goto } from '$app/navigation';
+	import { auto1111Images } from '$lib/stores/auto1111-images';
 
 	let interval: number;
 	let isTriggered = false;
@@ -16,10 +19,17 @@
 	let name: string;
 
 	$: if ($isComplete) {
-		setTimeout(() => {
+		setTimeout(async () => {
 			$isComplete = false;
 			completed = true;
-			generateImage();
+			timer.reset();
+
+			/**
+			 * This part redirecty immediately to the results page
+			 * This promise gets later resolved in the results page
+			 */
+			auto1111Images.set(generateImages(prompt));
+			goto(`/results?id=${id}&prompt=${prompt}`);
 		}, 2000);
 	}
 
@@ -38,6 +48,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Scribble by {name}</title>
+</svelte:head>
+
 <Counter
 	end="Scribble!"
 	onEnd={() => {
@@ -52,7 +66,7 @@
 />
 <div id="scribble" class="relative grid p-4">
 	<div id="prompt-text" class="relative w-full h-[152px] p-4">
-		<p>{prompt}</p>
+		<p>{prompt || ''}</p>
 		<div class="absolute left-0 bottom-0">Prompt</div>
 	</div>
 	<div

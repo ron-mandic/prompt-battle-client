@@ -1,10 +1,26 @@
 // TODO: Resolve type errors
 
+import { BATCH_SIZE } from '$lib/ts/constants';
+import type p5 from 'p5';
+
 export class Automatic1111 {
-	constructor(p5, _url) {
+	auto1111Url: string;
+	isProcessing: boolean;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	model_list: Array<any>;
+	modelNumber: number | string;
+	res: number;
+	p5: p5;
+
+	img: p5.Image;
+	cimg: p5.Image;
+	txt: string;
+	isReady: boolean;
+
+	constructor(p5: p5, _url: string) {
 		this.auto1111Url = _url;
 		this.isProcessing = false;
-		this.model_list;
+		this.model_list = [];
 		this.modelNumber = 0;
 		this.res = 512;
 		this.p5 = p5;
@@ -15,24 +31,31 @@ export class Automatic1111 {
 		this.isReady = false;
 	}
 
-	async txtToImg(_prompt, _controlnetImg, _controlnetModel) {
-		let prompt;
+	async txtToImg(
+		_prompt: string,
+		_controlnetImg: p5.Graphics,
+		_controlnetModel: string | undefined,
+		batch_size = BATCH_SIZE
+	) {
+		let prompt: string | undefined;
 		if (_prompt) {
 			prompt = _prompt;
 		}
 
-		let controlnetImg;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		let controlnetImg: any;
 		if (_controlnetImg) {
 			controlnetImg = _controlnetImg;
 		}
 
+		// @ts-expect-error - any does not exist
 		let controlnetModel = this.model_list[this.modelNumber];
 		if (_controlnetModel) {
 			controlnetModel = _controlnetModel;
 		}
 
 		let payload;
-		let url = this.auto1111Url + 'sdapi/v1/txt2img/';
+		const url = this.auto1111Url + 'sdapi/v1/txt2img/';
 
 		if (_prompt) {
 			this.isProcessing = true;
@@ -42,7 +65,7 @@ export class Automatic1111 {
 				cfg_scale: 6,
 				width: this.res,
 				height: this.res,
-
+				batch_size: batch_size + 1,
 				alwayson_scripts: {}
 			};
 
@@ -62,23 +85,24 @@ export class Automatic1111 {
 				console.log('Proceeding without Controlnet Image and a Controlnet Model ...');
 			}
 
-			let genImage = await this.p5.httpPost(url, 'json', payload);
+			const genImage = await this.p5.httpPost(url, 'json', payload);
 			this.img = this.p5.loadImage('data:image/png;base64,' + genImage.images[0]);
-			console.log(genImage.images);
 			this.isProcessing = false;
+
+			return genImage.images;
 		} else {
-			console.log('Need at least a promt ...');
+			console.warn('Need at least a prompt, Bro ...');
 		}
 	}
 
-	async imgToTxt(_img) {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	async imgToTxt(_img: any) {
 		let img;
 		if (_img) {
 			img = _img;
 		}
-		let url = this.auto1111Url + 'sdapi/v1/interrogate';
+		const url = this.auto1111Url + 'sdapi/v1/interrogate';
 		let payload;
-		let clipStr;
 
 		if (img) {
 			this.isProcessing = true;
@@ -87,7 +111,7 @@ export class Automatic1111 {
 				image: img.canvas.toDataURL(),
 				model: 'clip'
 			};
-			let t = await this.p5.httpPost(url, 'json', payload);
+			const t = await this.p5.httpPost(url, 'json', payload);
 			this.txt = t.caption;
 			console.log(this.txt);
 			this.isProcessing = false;
@@ -96,7 +120,8 @@ export class Automatic1111 {
 		}
 	}
 
-	async imgToControlnet(_img, _controlnetModule) {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	async imgToControlnet(_img: any, _controlnetModule: any) {
 		let payload;
 
 		let img;
@@ -104,7 +129,7 @@ export class Automatic1111 {
 			img = _img;
 		}
 
-		let controlnetModule = _controlnetModule;
+		const controlnetModule = _controlnetModule;
 		for (const model in this.model_list) {
 			console.log(this.model_list[model]);
 			if (this.model_list[model].search(controlnetModule) != -1) {
@@ -114,7 +139,8 @@ export class Automatic1111 {
 			}
 		}
 
-		let controlnetModel = this.model_list[this.modelNumber];
+		// @ts-expect-error - any does not exist
+		const controlnetModel = this.model_list[this.modelNumber];
 
 		//let tmpImg = img.canvas.toDataURL().toString();
 		if (img) {
@@ -126,7 +152,7 @@ export class Automatic1111 {
 				controlnet_input_images: [img.canvas.toDataURL().toString()]
 			};
 			console.log(payload);
-			let i = await this.p5.httpPost(
+			const i = await this.p5.httpPost(
 				this.auto1111Url + 'controlnet/detect',
 				'application/json',
 				payload
@@ -139,23 +165,24 @@ export class Automatic1111 {
 	}
 
 	async getControlnetInfo() {
-		let url = this.auto1111Url + 'controlnet/model_list';
-		let list;
+		const url = this.auto1111Url + 'controlnet/model_list';
 		let test = false;
-		list = await this.p5.httpGet(
+
+		const list = await this.p5.httpGet(
 			url,
 			'json',
 			false,
-			function (response) {
+			function (/* response */) {
 				test = true;
 			},
-			function (error) {
+			function (/* error */) {
 				test = false;
 				alert('not valid url ...');
 			}
 		);
 		console.log(test);
 		this.isReady = test;
+		// @ts-expect-error - TS complains unnecessary comparison
 		if (this.isReady == true) {
 			this.model_list = list.model_list;
 			console.log(this.model_list);

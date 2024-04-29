@@ -20,6 +20,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>AI + D Lab - Prompt Battle</title>
+</svelte:head>
+
 <div class="w-full max-w-[1419px] m-auto">
 	<h1 class="uppercase text-center w-full">{@html TEXT_H1}</h1>
 	<section id="terminal" class="p-2">
