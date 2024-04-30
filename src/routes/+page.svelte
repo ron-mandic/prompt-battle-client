@@ -3,16 +3,16 @@
 	import { v4 as uuidv4 } from 'uuid';
 	import { goto } from '$app/navigation';
 	import { TEXT_H1 } from '$lib/ts/constants';
+	// import { env } from '$env/dynamic/public';
+
+	const id = uuidv4();
 
 	let refTerminal: HTMLDivElement;
 	let refInput: HTMLInputElement;
 
 	let interval: number;
 	let ellipsis: string = '';
-
 	let isStarting = false;
-
-	const id = uuidv4();
 
 	onMount(() => {
 		sessionStorage.clear();
@@ -45,26 +45,32 @@
 					type="text"
 					name="player"
 					maxlength="20"
+					autocomplete="off"
 					on:blur={() => {
 						refInput.focus();
+						return false;
 					}}
 					on:input={() => {
 						refTerminal.style.setProperty('--offset', `${refInput.value.length * 30}px`);
 					}}
-					on:change={() => {
-						if (!sessionStorage.getItem(id)) {
-							sessionStorage.setItem(id, refInput.value);
-						}
+					on:keydown={(e) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
 
-						isStarting = true;
-						interval = setInterval(() => {
-							if (ellipsis.length === 3) {
-								clearInterval(interval);
-								goto(`/prompt/?id=${id}`);
-								return;
+							if (!sessionStorage.getItem(id)) {
+								sessionStorage.setItem(id, refInput.value);
 							}
-							ellipsis += '.';
-						}, 1000);
+
+							isStarting = true;
+							interval = setInterval(() => {
+								if (ellipsis.length === 3) {
+									clearInterval(interval);
+									goto(`/prompt/?id=${id}`);
+									return;
+								}
+								ellipsis += '.';
+							}, 1000);
+						}
 					}}
 					bind:this={refInput}
 				/>
@@ -135,6 +141,7 @@
 			height: 66px;
 			-webkit-animation: blink 1s step-end infinite;
 			animation: blink 1s step-end infinite;
+			border: none;
 		}
 	}
 
