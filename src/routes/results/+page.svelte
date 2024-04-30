@@ -3,43 +3,96 @@
 	import { auto1111Images } from '$lib/stores/auto1111-images';
 	import Loader from '$lib/components/Loader.svelte';
 	import { BATCH_SIZE } from '$lib/ts/constants';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { scale } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import { handleImageClick } from '$lib/ts/functions';
+	import { Confetti } from 'svelte-confetti';
 
 	let id, name: string, prompt: string;
+	let selected = false;
+	let visible = false;
+	let selectedIndex: number;
 
 	onMount(async () => {
 		id = $page.url.searchParams.get('id')!;
 		name = sessionStorage.getItem(id as string) || 'Anonymous';
 		prompt = $page.url.searchParams.get('prompt')!;
+
+		setTimeout(() => {
+			document.querySelectorAll('.marquee').forEach((marquee) => {
+				marquee.classList.add('fade');
+			});
+		}, 1500);
 	});
 </script>
 
 <svelte:head>
-	<title>Scribble by {name}</title>
+	<title>Results for {name}</title>
 </svelte:head>
 
 <div id="results" class="relative">
-	<div id="prompt-results" class="flex justify-center items-center">
+	<div id="prompt-results" class="relative flex justify-center items-center" class:selected>
 		{#await $auto1111Images}
 			{#each new Array(BATCH_SIZE) as _, i}
-				<div class="sd image bg-black flex justify-center items-center">
+				<div class="image loader bg-black flex justify-center items-center">
 					<Loader --delay={i} />
 				</div>
 			{/each}
 		{:then images}
-			{#each images.slice(0, images.length - 2) as image, i}
-				<div class="sd image bg-black flex justify-center items-center">
-					{#if images.length}
-						<img
-							src={`data:image/png;base64,${image}`}
-							alt={`${prompt} (${i})`}
-							in:scale={{ duration: 500, delay: 500, opacity: 0.5, start: 0.5, easing: quintOut }}
+			{#if !selected}
+				{#each images.slice(0, images.length - 2) as image, i}
+					<button
+						class="image bg-black flex justify-center items-center"
+						data-i={i}
+						on:click={(e) => {
+							selectedIndex = +handleImageClick(e);
+							selected = true;
+
+							setTimeout(async () => {
+								visible = true;
+								await tick();
+								setTimeout(() => {
+									visible = false;
+								}, 3500);
+							}, 1500);
+						}}
+					>
+						{#if images.length}
+							<img
+								class="w-full h-full"
+								src={`data:image/png;base64,${image}`}
+								alt={`${prompt} (${i})`}
+								in:scale={{ duration: 500, delay: 500, opacity: 0.5, start: 0.5, easing: quintOut }}
+							/>
+						{/if}
+					</button>
+				{/each}
+			{:else}
+				{#if visible}
+					<div id="confetti" class="pointer-events-none">
+						<Confetti
+							x={[-5, 5]}
+							y={[-5, 5]}
+							xSpread={0.125}
+							size={30}
+							duration={3500}
+							amount={250}
+							fallDistance="400px"
+							colorArray={['#ED3A4F', '#0091B5', '#FDB913']}
 						/>
-					{/if}
+					</div>
+				{/if}
+				<div
+					class="image-large bg-black flex justify-center items-center"
+					in:scale={{ duration: 500, delay: 150, opacity: 0.5, start: 0.5, easing: quintOut }}
+				>
+					<img
+						src={`data:image/png;base64,${images[selectedIndex]}`}
+						alt={`${prompt} (${selectedIndex})`}
+					/>
 				</div>
-			{/each}
+			{/if}
 		{/await}
 	</div>
 	<div id="prompt-footer" class="flex justify-between items-end">
@@ -72,10 +125,28 @@
 		}
 	}
 
+	#confetti {
+		width: 100px;
+		height: 100px;
+		top: 50%;
+		left: 50%;
+		transform: translate(calc(-50% + 50px), calc(-50% + 50px));
+		position: absolute;
+		background-color: transparent;
+	}
+
 	#prompt-results {
 		width: 100%;
 		height: 816px;
 		gap: 2rem;
+
+		&.selected {
+			height: 100%;
+		}
+	}
+
+	button {
+		all: unset;
 	}
 
 	.image {
@@ -87,10 +158,24 @@
 		border: 2px solid #6eebea;
 		transition: translate 0.5s ease-in-out;
 
-		&.sd:hover {
+		&:not(.loader):hover {
 			cursor: pointer;
 			translate: 0 -10px;
 			transition: translate 0.25s cubic-bezier(0.86, 0, 0.07, 1);
+		}
+	}
+
+	.image-large {
+		width: 876px;
+		height: 876px;
+		padding: 0.5rem;
+		aspect-ratio: 1 / 1;
+		flex-shrink: 0;
+		border: 2px solid #6eebea;
+
+		img {
+			width: 100%;
+			height: auto;
 		}
 	}
 
