@@ -3,9 +3,10 @@
 	import { v4 as uuidv4 } from 'uuid';
 	import { goto } from '$app/navigation';
 	import { TEXT_H1 } from '$lib/ts/constants';
-	// import { env } from '$env/dynamic/public';
+	import { Socket, io } from 'socket.io-client';
 
 	const id = uuidv4();
+	let socket: Socket = io('http://localhost:5173');
 
 	let refTerminal: HTMLDivElement;
 	let refInput: HTMLInputElement;
@@ -14,9 +15,26 @@
 	let ellipsis: string = '';
 	let isStarting = false;
 
+	let __playernumber__ = '?';
+
 	onMount(() => {
+		socket.on('connect', () => {
+			socket.emit('client:__connect__', {
+				id: socket.id,
+				port: window.location.port
+			});
+		});
+
+		socket.on('server:__playernumber__', (data) => {
+			__playernumber__ = data;
+		});
+
 		sessionStorage.clear();
 		refInput.focus();
+
+		return () => {
+			socket.disconnect();
+		};
 	});
 </script>
 
@@ -27,7 +45,7 @@
 <div class="w-full max-w-[1419px] m-auto">
 	<h1 class="uppercase text-center w-full">{@html TEXT_H1}</h1>
 	<section id="terminal" class="p-2">
-		<p>/Player 1 &gt; ./Prompt_Battle</p>
+		<p>/Player {__playernumber__} &gt; ./Prompt_Battle</p>
 		<p>Prompt_Battle loading...</p>
 		<p>Loading complete!</p>
 
@@ -40,18 +58,24 @@
 			bind:this={refTerminal}
 		>
 			<label>
-				<span>/Player 1 &gt;</span>
+				<span>/Player {__playernumber__} &gt;</span>
 				<input
 					type="text"
 					name="player"
 					maxlength="20"
 					autocomplete="off"
+					autocorrect="off"
 					on:blur={() => {
 						refInput.focus();
 						return false;
 					}}
 					on:input={() => {
 						refTerminal.style.setProperty('--offset', `${refInput.value.length * 30}px`);
+						socket.emit('server:showInputs', {
+							__playernumber__,
+							id: socket.id,
+							value: refInput.value
+						});
 					}}
 					on:keydown={(e) => {
 						if (e.key === 'Enter') {
