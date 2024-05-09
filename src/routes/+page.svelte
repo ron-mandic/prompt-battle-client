@@ -29,6 +29,10 @@
 			__playernumber__ = data;
 		});
 
+		socket.on('disconnect', () => {
+			console.log('Benutzer disconnected');
+		});
+
 		sessionStorage.clear();
 		refInput.focus();
 
