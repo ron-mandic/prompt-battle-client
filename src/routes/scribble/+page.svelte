@@ -123,6 +123,8 @@
 		font-weight: 400;
 		line-height: normal;
 		user-select: none;
+		max-width: 1824px;
+		overflow: hidden;
 
 		&::before {
 			content: '';

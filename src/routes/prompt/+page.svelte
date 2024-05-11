@@ -12,6 +12,8 @@
 	let name: string;
 	let initiated = false;
 
+	let maxLength = 1500;
+
 	onMount(() => {
 		id = $page.url.searchParams.get('id');
 		name = sessionStorage.getItem(id as string) || 'Anonymous';
@@ -48,7 +50,7 @@
 		id="prompt-area"
 		name="prompt"
 		class="relative w-full h-full focus:outline-none p-6"
-		maxlength="75"
+		maxlength={maxLength}
 		autocorrect="off"
 		bind:this={refTextarea}
 		bind:value
@@ -60,8 +62,12 @@
 				{$time}
 			</p>
 		</div>
-		<p id="prompt-length" class="h-[51px] flex items-center" class:full={value.length === 75}>
-			{value.length < 10 ? `0${value.length}` : value.length} / 75
+		<p
+			id="prompt-length"
+			class="h-[51px] flex items-center"
+			class:full={value.length === maxLength}
+		>
+			{value.length < 10 ? `0${value.length}` : value.length} / {maxLength}
 		</p>
 		<div id="prompter" class="px-2">{name}</div>
 	</div>
@@ -73,32 +79,23 @@
 		height: 940px;
 		border: 2px solid #6eebea;
 
-		&::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background-image: linear-gradient(to bottom, transparent, black);
-			z-index: 1;
-			pointer-events: none;
-		}
-
 		&::after {
-			content: 'PROMPT';
+			content: 'Illustrate a scene from a fun-filled day at a theme park with roller cfrom a fun-filled day at a theme park with roller coasters and attractions.';
 			position: absolute;
 			top: 50%;
 			left: 50%;
+			width: 90%;
 			transform: translate(-50%, -50%);
-			color: rgba(255, 255, 255, 0.075);
+			color: rgba(255, 255, 255, 0.125);
 			text-align: center;
 			font-family: 'JetBrains Mono';
-			font-size: 376px;
+			font-size: 4rem;
 			font-style: normal;
 			font-weight: 800;
 			line-height: normal;
+			text-wrap: balance;
 			z-index: -1;
+			outline: 1px solid red;
 		}
 	}
 
