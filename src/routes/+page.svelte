@@ -2,12 +2,13 @@
 	import { onMount } from 'svelte';
 	import { v4 as uuidv4 } from 'uuid';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { TEXT_H1 } from '$lib/ts/constants';
 	import { Socket, io } from 'socket.io-client';
 	// Load unique ID from environment variable
 
 	const id = uuidv4();
-	let socket: Socket = io('http://localhost:3000', {
+	const socket: Socket = io('http://localhost:3000', {
 		reconnection: true
 	});
 
@@ -17,28 +18,35 @@
 	let hasEntered = false;
 	let isStarting = false;
 
-	let playerName;
+	let mode: string;
+	let playerName: string;
+	let playerUUID: string;
 	let playerNumber = '?';
 
-	// TODO: Delete when done
-	const getPort = () => {
-		// return window.location.port;
-		const port = uuidv4().slice(0, 4);
-		sessionStorage.setItem('0', port);
-
-		return port;
-	};
-
 	onMount(() => {
-		// TODO: Delete when done
-		sessionStorage.clear();
-
 		socket.on('connect', () => {
-			socket.emit('c:initClient', getPort());
+			socket.emit('c:initClient');
 		});
 
-		socket.on('s:setPlayerNumber', (data) => {
-			playerNumber = data;
+		socket.on('s:initClient', ({ id, uuid }) => {
+			playerUUID = uuid;
+			playerNumber = id;
+
+			$page.url.searchParams.set('id', id);
+			$page.url.searchParams.set('uuid', uuid);
+			$page.url.searchParams.delete('mode');
+
+			goto(`?${$page.url.searchParams.toString()}`);
+		});
+
+		socket.on('s:start', () => {
+			isStarting = true;
+		});
+
+		socket.on('s:setMode', (data) => {
+			mode = data;
+			$page.url.searchParams.set('mode', data);
+			goto(`?${$page.url.searchParams.toString()}`);
 		});
 
 		refInput.focus();
@@ -47,6 +55,14 @@
 			socket.disconnect();
 		};
 	});
+
+	$: {
+		if (isStarting && mode) {
+			setTimeout(() => {
+				goto(`prompt?id=${playerNumber}&uuid=${playerUUID}&mode=${mode}&mode=${mode}`);
+			}, 3000);
+		}
+	}
 </script>
 
 <svelte:head>
@@ -59,9 +75,7 @@
 		<p>/Player {playerNumber} &gt; ./Prompt_Battle</p>
 		<p>Prompt_Battle loading...</p>
 		<p>Loading complete!</p>
-
 		<p class="mt-16">Enter your name!</p>
-
 		<div
 			id="terminal-input"
 			class="relative mt-16"
@@ -82,22 +96,26 @@
 					}}
 					on:input={() => {
 						refTerminal.style.setProperty('--offset', `${refInput.value.length * 30}px`);
+						playerName = refInput.value;
+						socket.emit('c:setPlayerNames', {
+							id: playerNumber,
+							name: playerName
+						});
 					}}
 					on:keydown={(e) => {
 						if (e.key === 'Enter') {
 							hasEntered = true;
+							socket.emit('c:setPlayerReadiness', playerNumber);
 						}
-						playerName = refInput.value;
-						socket.emit('c:setPlayerNames', { playerNumber, playerName });
 					}}
 					bind:this={refInput}
 				/>
 			</label>
 		</div>
-		{#if hasEntered && !isStarting}
-			<p id="terminal-indicator" class="w-full">waiting</p>
-		{:else if hasEntered && isStarting}
+		{#if hasEntered && isStarting && mode}
 			<p id="terminal-indicator" class="w-full">starting</p>
+		{:else if hasEntered}
+			<p id="terminal-indicator" class="w-full">waiting</p>
 		{/if}
 	</section>
 </div>

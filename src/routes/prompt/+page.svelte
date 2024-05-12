@@ -4,6 +4,11 @@
 	import Counter from '$lib/components/Counter.svelte';
 	import { timer, time, isRunning, isComplete } from '$lib/stores/timer-prompt';
 	import { onMount } from 'svelte';
+	import { Socket, io } from 'socket.io-client';
+
+	const socket: Socket = io('http://localhost:3000', {
+		reconnection: true
+	});
 
 	let refTextarea: HTMLTextAreaElement;
 
@@ -18,7 +23,9 @@
 
 	onMount(() => {
 		id = $page.url.searchParams.get('id');
-		name = sessionStorage.getItem(id as string) || 'Anonymous';
+		socket.on('connect', () => {
+			socket.emit('c:initClient', id);
+		});
 	});
 
 	$: if ($isComplete) {
