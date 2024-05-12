@@ -8,8 +8,9 @@
 	import { quintOut } from 'svelte/easing';
 	import { handleImageClick } from '$lib/ts/functions';
 	import { Confetti } from 'svelte-confetti';
+	import { socket } from '$lib/ts/variables';
 
-	let id, name: string, prompt: string;
+	let id: string, name: string, prompt: string;
 	let selected = false;
 	let visible = false;
 	let selectedIndex: number;
@@ -20,6 +21,14 @@
 		id = $page.url.searchParams.get('id')!;
 		mode = $page.url.searchParams.get('mode')!;
 		prompt = $page.url.searchParams.get('prompt')!;
+
+		socket.on('connect', () => {
+			socket.emit('c:initClient', id).emit('c:requestEvent', 's:sendPromptBattle');
+		});
+
+		socket.on('s:sendPromptBattle', ({ player0, player1 }) => {
+			name = id === '1' ? player0 : player1;
+		});
 
 		setTimeout(() => {
 			document.querySelectorAll('.marquee').forEach((marquee) => {
@@ -56,6 +65,16 @@
 							setTimeout(async () => {
 								visible = true;
 								await tick();
+
+								socket.emit('c:sendImageInfo/results', {
+									id,
+									imageIndex: i
+								});
+								socket.emit('c:sendImage/results', {
+									id,
+									image
+								});
+
 								setTimeout(() => {
 									visible = false;
 								}, 3500);

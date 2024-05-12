@@ -8,6 +8,11 @@
 	import { promptValue } from '$lib/stores/prompt-value';
 	import Counter from '$lib/components/Counter.svelte';
 	import P5 from 'p5-svelte';
+	import { Socket, io } from 'socket.io-client';
+
+	const socket: Socket = io('http://localhost:3000', {
+		reconnection: true
+	});
 
 	let interval: number;
 	let isTriggered = false;
@@ -25,6 +30,14 @@
 		uuid = $page.url.searchParams.get('uuid')!;
 		dataGUUID = $page.url.searchParams.get('guuid')!;
 		mode = $page.url.searchParams.get('mode')!;
+
+		socket.on('connect', () => {
+			socket.emit('c:initClient', id).emit('c:requestEvent', 's:sendPromptBattle');
+		});
+
+		socket.on('s:sendPromptBattle', ({ player0, player1 }) => {
+			name = id === '1' ? player0 : player1;
+		});
 
 		interval = setInterval(() => {
 			isTriggered = !isTriggered;
@@ -46,6 +59,7 @@
 			 * This promise gets later resolved in the results page
 			 */
 			auto1111Images.set(generateImages($promptValue));
+			socket.emit('c:sendRoute/scribble', id);
 			goto(`results?id=${id}&uuid=${uuid}&mode=${mode}&guuid=${dataGUUID}`);
 		}, 2000);
 	}
@@ -227,7 +241,7 @@
 			line-height: normal;
 
 			&.completing {
-				animation: pulse 0.75s linear infinite;
+				animation: pulse 1s linear infinite;
 			}
 
 			&.complete {

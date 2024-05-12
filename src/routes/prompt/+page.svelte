@@ -98,6 +98,7 @@
 					break;
 				}
 			}
+			socket.emit('c:sendRoute/prompt', id);
 		}, 2000);
 	}
 </script>
@@ -234,7 +235,7 @@
 			line-height: normal;
 
 			&.completing {
-				animation: pulse 0.75s linear infinite;
+				animation: pulse 1s linear infinite;
 			}
 
 			&.complete {
