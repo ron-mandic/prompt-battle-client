@@ -17,14 +17,24 @@
 	let name: string;
 	let initiated = false;
 
-	let dataPrompt =
-		'Illustrate a scene from a fun-filled day at a theme park with roller coasters and attractions.';
+	let dataPrompt: string;
+	let dataUUID: string;
 	let maxLength = 1500;
 
 	onMount(() => {
 		id = $page.url.searchParams.get('id');
+
 		socket.on('connect', () => {
-			socket.emit('c:initClient', id);
+			socket.emit('c:initClient', id).emit('c:requestEvent', 's:sendPromptBattle');
+		});
+
+		socket.on('s:sendPromptBattle', ({ guuid, player0, player1, prompts, currentRound }) => {
+			name = id === '1' ? player0 : player1;
+			dataPrompt = prompts[currentRound - 1];
+			dataUUID = guuid;
+
+			$page.url.searchParams.set('guuid', dataUUID);
+			goto(`?${$page.url.searchParams.toString()}`); // ...&guuid=g-...
 		});
 	});
 
@@ -76,7 +86,7 @@
 			class="h-[51px] flex items-center"
 			class:full={value.length === maxLength}
 		>
-			{value.length < 10 ? `0${value.length}` : value.length} / {maxLength}
+			{(value.length < 10 ? `0${value.length}` : value.length.toString()).padStart(4, '0')} / {maxLength}
 		</p>
 		<div id="prompter" class="px-2">{name}</div>
 	</div>

@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { v4 as uuidv4 } from 'uuid';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { TEXT_H1 } from '$lib/ts/constants';
 	import { Socket, io } from 'socket.io-client';
-	// Load unique ID from environment variable
 
-	const id = uuidv4();
 	const socket: Socket = io('http://localhost:3000', {
 		reconnection: true
 	});
@@ -59,7 +56,7 @@
 	$: {
 		if (isStarting && mode) {
 			setTimeout(() => {
-				goto(`prompt?id=${playerNumber}&uuid=${playerUUID}&mode=${mode}&mode=${mode}`);
+				goto(`prompt?id=${playerNumber}&uuid=${playerUUID}&mode=${mode}`);
 			}, 3000);
 		}
 	}
