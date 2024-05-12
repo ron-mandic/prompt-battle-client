@@ -12,6 +12,8 @@
 	let name: string;
 	let initiated = false;
 
+	let dataPrompt =
+		'Illustrate a scene from a fun-filled day at a theme park with roller coasters and attractions.';
 	let maxLength = 1500;
 
 	onMount(() => {
@@ -45,7 +47,7 @@
 		}, 1500);
 	}}
 />
-<div id="prompt" class="relative">
+<div id="prompt" class="relative" data-prompt={dataPrompt}>
 	<textarea
 		id="prompt-area"
 		name="prompt"
@@ -80,7 +82,7 @@
 		border: 2px solid #6eebea;
 
 		&::after {
-			content: 'Illustrate a scene from a fun-filled day at a theme park with roller cfrom a fun-filled day at a theme park with roller coasters and attractions.';
+			content: attr(data-prompt);
 			position: absolute;
 			top: 50%;
 			left: 50%;
@@ -88,14 +90,12 @@
 			transform: translate(-50%, -50%);
 			color: rgba(255, 255, 255, 0.125);
 			text-align: center;
-			font-family: 'JetBrains Mono';
 			font-size: 4rem;
 			font-style: normal;
 			font-weight: 800;
 			line-height: normal;
 			text-wrap: balance;
 			z-index: -1;
-			outline: 1px solid red;
 		}
 	}
 

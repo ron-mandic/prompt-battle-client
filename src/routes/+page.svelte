@@ -4,36 +4,43 @@
 	import { goto } from '$app/navigation';
 	import { TEXT_H1 } from '$lib/ts/constants';
 	import { Socket, io } from 'socket.io-client';
+	// Load unique ID from environment variable
 
 	const id = uuidv4();
-	let socket: Socket = io('http://localhost:5173');
+	let socket: Socket = io('http://localhost:3000', {
+		reconnection: true
+	});
 
 	let refTerminal: HTMLDivElement;
 	let refInput: HTMLInputElement;
 
-	let interval: number;
-	let ellipsis: string = '';
+	let hasEntered = false;
 	let isStarting = false;
 
-	let __playernumber__ = '?';
+	let playerName;
+	let playerNumber = '?';
+
+	// TODO: Delete when done
+	const getPort = () => {
+		// return window.location.port;
+		const port = uuidv4().slice(0, 4);
+		sessionStorage.setItem('0', port);
+
+		return port;
+	};
 
 	onMount(() => {
-		socket.on('connect', () => {
-			socket.emit('client:__connect__', {
-				id: socket.id,
-				port: window.location.port
-			});
-		});
-
-		socket.on('server:__playernumber__', (data) => {
-			__playernumber__ = data;
-		});
-
-		socket.on('disconnect', () => {
-			console.log('Benutzer disconnected');
-		});
-
+		// TODO: Delete when done
 		sessionStorage.clear();
+
+		socket.on('connect', () => {
+			socket.emit('c:initClient', getPort());
+		});
+
+		socket.on('s:setPlayerNumber', (data) => {
+			playerNumber = data;
+		});
+
 		refInput.focus();
 
 		return () => {
@@ -49,7 +56,7 @@
 <div class="w-full max-w-[1419px] m-auto">
 	<h1 class="uppercase text-center w-full">{@html TEXT_H1}</h1>
 	<section id="terminal" class="p-2">
-		<p>/Player {__playernumber__} &gt; ./Prompt_Battle</p>
+		<p>/Player {playerNumber} &gt; ./Prompt_Battle</p>
 		<p>Prompt_Battle loading...</p>
 		<p>Loading complete!</p>
 
@@ -62,7 +69,7 @@
 			bind:this={refTerminal}
 		>
 			<label>
-				<span>/Player {__playernumber__} &gt;</span>
+				<span>/Player {playerNumber} &gt;</span>
 				<input
 					type="text"
 					name="player"
@@ -75,39 +82,22 @@
 					}}
 					on:input={() => {
 						refTerminal.style.setProperty('--offset', `${refInput.value.length * 30}px`);
-						socket.emit('server:showInputs', {
-							__playernumber__,
-							id: socket.id,
-							value: refInput.value
-						});
 					}}
 					on:keydown={(e) => {
 						if (e.key === 'Enter') {
-							e.preventDefault();
-
-							if (!sessionStorage.getItem(id)) {
-								sessionStorage.setItem(id, refInput.value);
-							}
-
-							isStarting = true;
-							interval = setInterval(() => {
-								if (ellipsis.length === 3) {
-									clearInterval(interval);
-									goto(`/prompt/?id=${id}`);
-									return;
-								}
-								ellipsis += '.';
-							}, 1000);
+							hasEntered = true;
 						}
+						playerName = refInput.value;
+						socket.emit('c:setPlayerNames', { playerNumber, playerName });
 					}}
 					bind:this={refInput}
 				/>
 			</label>
 		</div>
-		{#if isStarting}
-			<p id="terminal-indicator" class="w-full" class:starting={ellipsis.length}>
-				starting<span class="text-left">{ellipsis}</span>
-			</p>
+		{#if hasEntered && !isStarting}
+			<p id="terminal-indicator" class="w-full">waiting</p>
+		{:else if hasEntered && isStarting}
+			<p id="terminal-indicator" class="w-full">starting</p>
 		{/if}
 	</section>
 </div>
@@ -173,9 +163,9 @@
 		}
 	}
 
-	#terminal-indicator.starting {
-		animation: blink 1s infinite;
-	}
+	// #terminal-indicator {
+	// 	animation: blink 1s infinite;
+	// }
 
 	@keyframes slide-in-up {
 		0% {
