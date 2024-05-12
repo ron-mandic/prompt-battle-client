@@ -2,10 +2,10 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import Counter from '$lib/components/Counter.svelte';
-	import { timer, time, isRunning, isComplete } from '$lib/stores/timer-prompt';
+	import { timer, time, isRunning, isComplete, resetTimer } from '$lib/stores/timer-prompt';
 	import { promptValue } from '$lib/stores/prompt-value';
 	import { auto1111Images } from '$lib/stores/auto1111-images';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { Socket, io } from 'socket.io-client';
 	import { BATCH_SIZE } from '$lib/ts/constants';
 
@@ -59,6 +59,10 @@
 			$page.url.searchParams.set('guuid', dataGUUID);
 			goto(`?${$page.url.searchParams.toString()}`); // ...&guuid=g-...
 		});
+	});
+
+	onDestroy(() => {
+		resetTimer();
 	});
 
 	$: if ($isComplete) {
@@ -143,7 +147,7 @@
 		>
 			{(value.length < 10 ? `0${value.length}` : value.length.toString()).padStart(4, '0')} / {maxLength}
 		</p>
-		<div id="prompter" class="px-2">{name}</div>
+		<div id="prompter" class="px-2">{name || '...'}</div>
 	</div>
 </div>
 

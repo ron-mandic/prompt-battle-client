@@ -36,6 +36,12 @@
 		});
 		socket.on('s:sendPromptBattle', ({ player0, player1 }) => {
 			name = id === '1' ? player0 : player1;
+			console.log('/RESULTS', name, id, mode, prompt); // wefwefwef 1 p null
+
+			if (name === undefined) socket.emit('c:requestEvent', 's:getName');
+		});
+		socket.on('s:getName', (auth) => {
+			name = auth[id]?.name;
 		});
 
 		socket.on('s:sendGameStats', (_id) => {
@@ -199,7 +205,7 @@
 			<p>time remaining:</p>
 			<p>--:--</p>
 		</div>
-		<div id="prompter" class="px-2">{name}</div>
+		<div id="prompter" class="px-2">{name || sessionStorage.getItem(id)}</div>
 	</div>
 </div>
 

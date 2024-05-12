@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import { timer, time, isComplete } from '$lib/stores/timer-scribble';
+	import { onDestroy, onMount } from 'svelte';
+	import { timer, time, isComplete, resetTimer } from '$lib/stores/timer-scribble';
 	import { generateImages, sketch } from '$lib/ts/functions';
 	import { auto1111Images } from '$lib/stores/auto1111-images';
 	import { promptValue } from '$lib/stores/prompt-value';
@@ -37,6 +37,11 @@
 
 		socket.on('s:sendPromptBattle', ({ player0, player1 }) => {
 			name = id === '1' ? player0 : player1;
+
+			if (name === undefined) socket.emit('c:requestEvent', 's:getName');
+		});
+		socket.on('s:getName', (auth) => {
+			name = auth[id]?.name;
 		});
 
 		interval = setInterval(() => {
@@ -46,6 +51,10 @@
 		return () => {
 			clearInterval(interval);
 		};
+	});
+
+	onDestroy(() => {
+		resetTimer();
 	});
 
 	$: if ($isComplete) {
@@ -104,7 +113,7 @@
 				{$time}
 			</p>
 		</div>
-		<div id="prompter" class="px-2">{name}</div>
+		<div id="prompter" class="px-2">{name || sessionStorage.getItem(id)}</div>
 	</div>
 </div>
 

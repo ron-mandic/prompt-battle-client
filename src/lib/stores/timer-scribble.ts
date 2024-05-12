@@ -13,6 +13,13 @@ export const time = writable(formatter.format(COUNTDOWN_FROM));
 export const isRunning = writable(false);
 export const isComplete = writable(false);
 
+export const resetTimer = () => {
+	time.set(formatter.format(COUNTDOWN_FROM));
+	isRunning.set(false);
+	isComplete.set(false);
+	timer = createTimer();
+};
+
 const createTimer = (ms = COUNTDOWN_FROM) => {
 	let animationRef: number;
 	let latestStartTime: number | undefined;
@@ -55,4 +62,4 @@ const createTimer = (ms = COUNTDOWN_FROM) => {
 	return api;
 };
 
-export const timer = createTimer();
+export let timer = createTimer();

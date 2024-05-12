@@ -21,6 +21,8 @@
 	let playerNumber = '?';
 
 	onMount(() => {
+		sessionStorage.clear();
+
 		socket.on('connect', () => {
 			socket.emit('c:initClient');
 		});
@@ -103,6 +105,9 @@
 						if (e.key === 'Enter') {
 							hasEntered = true;
 							socket.emit('c:setPlayerReadiness', playerNumber);
+
+							// Alternative solution to undefined in scribble and results-views
+							sessionStorage.setItem(playerNumber, playerName);
 						}
 					}}
 					bind:this={refInput}
