@@ -1,3 +1,4 @@
 import { writable } from 'svelte/store';
 
-export const auto1111Images = writable<Array<string> | Promise<string[]>>([]);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const auto1111Images = writable<Array<string> | Promise<any>>([]);

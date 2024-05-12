@@ -3,8 +3,11 @@
 	import { goto } from '$app/navigation';
 	import Counter from '$lib/components/Counter.svelte';
 	import { timer, time, isRunning, isComplete } from '$lib/stores/timer-prompt';
+	import { promptValue } from '$lib/stores/prompt-value';
+	import { auto1111Images } from '$lib/stores/auto1111-images';
 	import { onMount } from 'svelte';
 	import { Socket, io } from 'socket.io-client';
+	import { BATCH_SIZE } from '$lib/ts/constants';
 
 	const socket: Socket = io('http://localhost:3000', {
 		reconnection: true
@@ -18,11 +21,31 @@
 	let initiated = false;
 
 	let dataPrompt: string;
-	let dataUUID: string;
+	let dataGUUID: string;
 	let maxLength = 1500;
 
+	let uuid: string;
+	let mode: string;
+	const URL = 'https://companion-noble-diving-introducing.trycloudflare.com/sdapi/v1/txt2img/';
+
+	let payload;
+	let requestOptions;
+
+	async function generateImages(url: string, requestoptions: RequestInit) {
+		return await fetch(url, requestoptions)
+			.then((res) => res.json())
+			.then((data) => {
+				return data.images;
+			})
+			.catch((err) => {
+				console.error(err);
+			});
+	}
+
 	onMount(() => {
-		id = $page.url.searchParams.get('id');
+		id = $page.url.searchParams.get('id')!;
+		uuid = $page.url.searchParams.get('uuid')!;
+		mode = $page.url.searchParams.get('mode')!;
 
 		socket.on('connect', () => {
 			socket.emit('c:initClient', id).emit('c:requestEvent', 's:sendPromptBattle');
@@ -31,19 +54,50 @@
 		socket.on('s:sendPromptBattle', ({ guuid, player0, player1, prompts, currentRound }) => {
 			name = id === '1' ? player0 : player1;
 			dataPrompt = prompts[currentRound - 1];
-			dataUUID = guuid;
+			dataGUUID = guuid;
 
-			$page.url.searchParams.set('guuid', dataUUID);
+			$page.url.searchParams.set('guuid', dataGUUID);
 			goto(`?${$page.url.searchParams.toString()}`); // ...&guuid=g-...
 		});
 	});
 
 	$: if ($isComplete) {
-		setTimeout(() => {
+		$promptValue = value;
+
+		setTimeout(async () => {
 			$isRunning = false;
 			$isComplete = false;
 			timer.reset();
-			goto(`/scribble?id=${id}&prompt=${value}`);
+
+			switch (mode) {
+				case 'p': {
+					payload = {
+						prompt: value,
+						steps: 20,
+						cfg_scale: 6,
+						width: 512,
+						height: 512,
+						batch_size: BATCH_SIZE + 1,
+						alwayson_scripts: {}
+					};
+
+					requestOptions = {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify(payload)
+					};
+
+					auto1111Images.set(generateImages(URL, requestOptions));
+					goto(`results?id=${id}&uuid=${uuid}&mode=${mode}&guuid=${dataGUUID}`);
+					break;
+				}
+				case 'ps': {
+					goto(`scribble?id=${id}&uuid=${uuid}&mode=${mode}&guuid=${dataGUUID}`);
+					break;
+				}
+			}
 		}, 2000);
 	}
 </script>

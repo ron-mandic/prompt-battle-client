@@ -33,7 +33,7 @@ export class Automatic1111 {
 
 	async txtToImg(
 		_prompt: string,
-		_controlnetImg: p5.Graphics,
+		_controlnetImg: p5.Graphics | null,
 		_controlnetModel: string | undefined,
 		batch_size = BATCH_SIZE
 	) {
@@ -86,7 +86,6 @@ export class Automatic1111 {
 			}
 
 			const genImage = await this.p5.httpPost(url, 'json', payload);
-			this.img = this.p5.loadImage('data:image/png;base64,' + genImage.images[0]);
 			this.isProcessing = false;
 
 			return genImage.images;

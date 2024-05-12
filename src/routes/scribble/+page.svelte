@@ -1,22 +1,39 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { timer, time, isComplete } from '$lib/stores/timer-scribble';
+	import { generateImages, sketch } from '$lib/ts/functions';
+	import { auto1111Images } from '$lib/stores/auto1111-images';
+	import { promptValue } from '$lib/stores/prompt-value';
 	import Counter from '$lib/components/Counter.svelte';
 	import P5 from 'p5-svelte';
-	import { generateImages, sketch } from '$lib/ts/functions';
-	import { auto1111Process } from '$lib/stores/auto1111-process';
-	import { goto } from '$app/navigation';
-	import { auto1111Images } from '$lib/stores/auto1111-images';
 
 	let interval: number;
 	let isTriggered = false;
-
 	let initiated = false;
 	let completed = false;
+
 	let id: string;
-	let prompt: string;
 	let name: string;
+	let uuid: string;
+	let dataGUUID: string;
+	let mode: string;
+
+	onMount(() => {
+		id = $page.url.searchParams.get('id')!;
+		uuid = $page.url.searchParams.get('uuid')!;
+		dataGUUID = $page.url.searchParams.get('guuid')!;
+		mode = $page.url.searchParams.get('mode')!;
+
+		interval = setInterval(() => {
+			isTriggered = !isTriggered;
+		}, 6500);
+
+		return () => {
+			clearInterval(interval);
+		};
+	});
 
 	$: if ($isComplete) {
 		setTimeout(async () => {
@@ -28,24 +45,10 @@
 			 * This part redirecty immediately to the results page
 			 * This promise gets later resolved in the results page
 			 */
-			auto1111Images.set(generateImages(prompt));
-			goto(`/results?id=${id}&prompt=${prompt}`);
+			auto1111Images.set(generateImages($promptValue));
+			goto(`results?id=${id}&uuid=${uuid}&mode=${mode}&guuid=${dataGUUID}`);
 		}, 2000);
 	}
-
-	onMount(() => {
-		id = $page.url.searchParams.get('id')!;
-		name = sessionStorage.getItem(id as string) || 'Anonymous';
-		prompt = $page.url.searchParams.get('prompt')!;
-
-		interval = setInterval(() => {
-			isTriggered = !isTriggered;
-		}, 6500);
-
-		return () => {
-			clearInterval(interval);
-		};
-	});
 </script>
 
 <svelte:head>
@@ -66,7 +69,7 @@
 />
 <div id="scribble" class="relative grid p-4">
 	<div id="prompt-text" class="relative w-full h-[152px] p-4">
-		<p>{prompt || ''}</p>
+		<p>{$promptValue || ''}</p>
 		<div class="absolute left-0 bottom-0">Prompt</div>
 	</div>
 	<div

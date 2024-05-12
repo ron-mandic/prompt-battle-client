@@ -14,9 +14,11 @@
 	let visible = false;
 	let selectedIndex: number;
 
+	let mode: string;
+
 	onMount(async () => {
 		id = $page.url.searchParams.get('id')!;
-		name = sessionStorage.getItem(id as string) || 'Anonymous';
+		mode = $page.url.searchParams.get('mode')!;
 		prompt = $page.url.searchParams.get('prompt')!;
 
 		setTimeout(() => {
@@ -41,7 +43,9 @@
 			{/each}
 		{:then images}
 			{#if !selected}
-				{#each images.slice(0, images.length - 2) as image, i}
+				{@const args =
+					mode === 'p' ? images.slice(0, images.length - 1) : images.slice(0, images.length - 2)}
+				{#each args as image, i}
 					<button
 						class="image bg-black flex justify-center items-center"
 						data-i={i}
