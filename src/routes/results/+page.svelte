@@ -1,7 +1,10 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { auto1111Images } from '$lib/stores/auto1111-images';
 	import Loader from '$lib/components/Loader.svelte';
+	import Banner from '$lib/components/Banner.svelte';
+	import Counter from '$lib/components/Counter.svelte';
 	import { BATCH_SIZE } from '$lib/ts/constants';
 	import { onMount, tick } from 'svelte';
 	import { scale } from 'svelte/transition';
@@ -9,13 +12,19 @@
 	import { handleImageClick } from '$lib/ts/functions';
 	import { Confetti } from 'svelte-confetti';
 	import { socket } from '$lib/ts/variables';
+	import { EBannerText } from '$lib/ts/enums';
 
 	let id: string, name: string, prompt: string;
 	let selected = false;
 	let visible = false;
 	let selectedIndex: number;
 
+	let hasAwarded = false;
+	let haveWon: undefined | -1 | 0 | 1;
+	let isRedirecting = false;
 	let mode: string;
+
+	let message: string;
 
 	onMount(async () => {
 		id = $page.url.searchParams.get('id')!;
@@ -25,9 +34,33 @@
 		socket.on('connect', () => {
 			socket.emit('c:initClient', id).emit('c:requestEvent', 's:sendPromptBattle');
 		});
-
 		socket.on('s:sendPromptBattle', ({ player0, player1 }) => {
 			name = id === '1' ? player0 : player1;
+		});
+
+		socket.on('s:sendGameStats', (_id) => {
+			setTimeout(() => {
+				switch (_id) {
+					case undefined: {
+						haveWon = -1;
+						break;
+					}
+					default: {
+						haveWon = _id === id ? 1 : 0;
+						setTimeout(() => {
+							hasAwarded = true;
+						}, 6000);
+						break;
+					}
+				}
+
+				console.log(_id, id, haveWon); // undefined '2' 0
+			}, 2000);
+		});
+
+		socket.on('s:prepareClient', (_message) => {
+			message = _message;
+			isRedirecting = true;
 		});
 
 		setTimeout(() => {
@@ -44,79 +77,122 @@
 
 <div id="results" class="relative">
 	<div id="prompt-results" class="relative flex justify-center items-center" class:selected>
-		{#await $auto1111Images}
-			{#each new Array(BATCH_SIZE) as _, i}
-				<div class="image loader bg-black flex justify-center items-center">
-					<Loader --delay={i} />
-				</div>
-			{/each}
-		{:then images}
-			{#if !selected}
-				{@const args =
-					mode === 'p' ? images.slice(0, images.length - 1) : images.slice(0, images.length - 2)}
-				{#each args as image, i}
-					<button
-						class="image bg-black flex justify-center items-center"
-						data-i={i}
-						on:click={(e) => {
-							selectedIndex = +handleImageClick(e);
-							selected = true;
+		{#if isRedirecting}
+			<Counter
+				--background-overlay="transparent"
+				end="Carry on!"
+				onEnd={() => {
+					console.log(message);
 
-							setTimeout(async () => {
-								visible = true;
-								await tick();
+					switch (message) {
+						case 'round=current': {
+							console.log("I'm here. Current");
 
-								socket.emit('c:sendImageInfo/results', {
-									id,
-									imageIndex: i
-								});
-								socket.emit('c:sendImage/results', {
-									id,
-									image
-								});
+							goto(`/prompt?${$page.url.searchParams.toString()}`);
+							break;
+						}
+						case 'round=new': {
+							console.log("I'm here. New");
 
-								setTimeout(() => {
-									visible = false;
-								}, 3500);
-							}, 1500);
-						}}
-					>
-						{#if images.length}
-							<img
-								class="w-full h-full"
-								src={`data:image/png;base64,${image}`}
-								alt={`${prompt} (${i})`}
-								in:scale={{ duration: 500, delay: 500, opacity: 0.5, start: 0.5, easing: quintOut }}
-							/>
-						{/if}
-					</button>
+							goto('/');
+							break;
+						}
+						default:
+							break;
+					}
+				}}
+			/>
+		{:else if haveWon === undefined && !hasAwarded && !isRedirecting}
+			{#await $auto1111Images}
+				{#each new Array(BATCH_SIZE) as _, i}
+					<div class="image loader bg-black flex justify-center items-center">
+						<Loader --delay={i} />
+					</div>
 				{/each}
-			{:else}
-				{#if visible}
-					<div id="confetti" class="pointer-events-none">
-						<Confetti
-							x={[-5, 5]}
-							y={[-5, 5]}
-							xSpread={0.125}
-							size={30}
-							duration={3500}
-							amount={250}
-							fallDistance="400px"
-							colorArray={['#ED3A4F', '#0091B5', '#FDB913']}
+			{:then images}
+				{#if !selected}
+					{@const args =
+						mode === 'p' ? images.slice(0, images.length - 1) : images.slice(0, images.length - 2)}
+					{#each args as image, i}
+						<button
+							class="image bg-black flex justify-center items-center"
+							data-i={i}
+							on:click={(e) => {
+								selectedIndex = +handleImageClick(e);
+								selected = true;
+
+								setTimeout(async () => {
+									visible = true;
+									await tick();
+
+									socket.emit('c:sendImageInfo/results', {
+										id,
+										imageIndex: i
+									});
+									socket.emit('c:sendImage/results', {
+										id,
+										image
+									});
+
+									setTimeout(() => {
+										visible = false;
+									}, 3500);
+								}, 1500);
+							}}
+						>
+							{#if images.length}
+								<img
+									class="w-full h-full"
+									src={`data:image/png;base64,${image}`}
+									alt={`${prompt} (${i})`}
+									in:scale={{
+										duration: 500,
+										delay: 500,
+										opacity: 0.5,
+										start: 0.5,
+										easing: quintOut
+									}}
+								/>
+							{/if}
+						</button>
+					{/each}
+				{:else}
+					{#if visible}
+						<div id="confetti" class="pointer-events-none">
+							<Confetti
+								x={[-5, 5]}
+								y={[-5, 5]}
+								xSpread={0.125}
+								size={30}
+								duration={3500}
+								amount={250}
+								fallDistance="400px"
+								colorArray={['#ED3A4F', '#0091B5', '#FDB913']}
+							/>
+						</div>
+					{/if}
+					<div
+						class="image-large bg-black flex justify-center items-center"
+						in:scale={{ duration: 500, delay: 150, opacity: 0.5, start: 0.5, easing: quintOut }}
+					>
+						<img
+							src={`data:image/png;base64,${images[selectedIndex]}`}
+							alt={`${prompt} (${selectedIndex})`}
 						/>
 					</div>
 				{/if}
-				<div
-					class="image-large bg-black flex justify-center items-center"
-					in:scale={{ duration: 500, delay: 150, opacity: 0.5, start: 0.5, easing: quintOut }}
-				>
-					<img
-						src={`data:image/png;base64,${images[selectedIndex]}`}
-						alt={`${prompt} (${selectedIndex})`}
-					/>
-				</div>
-			{/if}
-		{/await}
+			{/await}
+		{:else if haveWon === -1 && !hasAwarded && !isRedirecting}
+			<Banner innerText={EBannerText.ROUND} />
+		{:else if haveWon === 0 && !hasAwarded && !isRedirecting}
+			<Banner innerText={EBannerText.LOSS} />
+		{:else if haveWon === 1 && !hasAwarded && !isRedirecting}
+			<Banner innerText={EBannerText.WIN} />
+		{:else if haveWon === 0 && hasAwarded && !isRedirecting}
+			<Banner innerText={EBannerText.ROUND} />
+		{:else if haveWon === 1 && hasAwarded && !isRedirecting}
+			<Banner innerText={EBannerText.ROUND} />
+		{/if}
 	</div>
 	<div id="prompt-footer" class="flex justify-between items-end">
 		<div id="prompt-clock" class="flex flex-col justify-center">

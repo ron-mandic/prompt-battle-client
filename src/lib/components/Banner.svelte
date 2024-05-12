@@ -6,7 +6,11 @@
 </script>
 
 <div id="banner" class="relative flex justify-center items-center w-[774px] text-center font-bold">
-	<span class="text-center w-full">{innerText}</span>
+	<span
+		class="text-center w-full"
+		class:win={innerText === EBannerText.WIN}
+		class:loss={innerText === EBannerText.LOSS}>{innerText}</span
+	>
 	{#if innerText === EBannerText.WIN}
 		<div id="confetti" class="absolute w-24 h-24 top-1/2 left-1/2 -translate-y-1/2">
 			<Confetti
@@ -22,7 +26,6 @@
 		</div>
 	{/if}
 </div>
-<div id="banner-overlay"></div>
 
 <style lang="scss">
 	#banner {
@@ -44,19 +47,93 @@
 		user-select: none;
 		z-index: 998;
 		border: 2px solid #6eebea;
-		background: #000;
+		background: transparent;
 
 		width: 1632px;
 		height: 335px;
+
+		span.win {
+			animation: tada 1s ease-in-out alternate-reverse;
+			animation-iteration-count: 2;
+			animation-delay: 0.5s;
+		}
+
+		span.loss {
+			animation: shakeX 1s ease-in-out alternate-reverse;
+			animation-iteration-count: 2;
+			animation-delay: 0.5s;
+		}
 	}
 
-	#banner-overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100vw;
-		height: 100vh;
-		background: rgba(0, 0, 0, 0.875);
-		z-index: 997;
+	@keyframes shakeX {
+		from,
+		to {
+			transform: translate3d(0, 0, 0);
+		}
+
+		10%,
+		30%,
+		50%,
+		70%,
+		90% {
+			transform: translate3d(-10px, 0, 0);
+		}
+
+		20%,
+		40%,
+		60%,
+		80% {
+			transform: translate3d(10px, 0, 0);
+		}
+	}
+
+	@keyframes tada {
+		from {
+			transform: scale3d(1, 1, 1);
+		}
+
+		10%,
+		20% {
+			transform: scale3d(0.9, 0.9, 0.9) rotate3d(0, 0, 1, -3deg);
+		}
+
+		30%,
+		50%,
+		70%,
+		90% {
+			transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, 3deg);
+		}
+
+		40%,
+		60%,
+		80% {
+			transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, -3deg);
+		}
+
+		to {
+			transform: scale3d(1, 1, 1);
+		}
+	}
+
+	@keyframes heartBeat {
+		0% {
+			transform: scale(1);
+		}
+
+		14% {
+			transform: scale(1.3);
+		}
+
+		28% {
+			transform: scale(1);
+		}
+
+		42% {
+			transform: scale(1.3);
+		}
+
+		70% {
+			transform: scale(1);
+		}
 	}
 </style>

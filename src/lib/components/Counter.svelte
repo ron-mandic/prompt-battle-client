@@ -66,7 +66,7 @@
 		left: 0;
 		width: 100vw;
 		height: 100vh;
-		background: rgba(0, 0, 0, 0.875);
+		background: var(--background-overlay, rgba(0, 0, 0, 0.875));
 		z-index: 997;
 	}
 
