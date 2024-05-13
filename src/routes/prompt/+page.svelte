@@ -130,6 +130,9 @@
 		class="relative w-full h-full focus:outline-none p-6"
 		maxlength={maxLength}
 		autocorrect="off"
+		on:input={() => {
+			socket.emit('c:sendClientPrompt', { id, value });
+		}}
 		bind:this={refTextarea}
 		bind:value
 	/>
