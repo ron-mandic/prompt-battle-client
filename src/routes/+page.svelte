@@ -103,6 +103,8 @@
 					}}
 					on:keydown={(e) => {
 						if (e.key === 'Enter') {
+							if (refInput.value === '') return;
+
 							hasEntered = true;
 							socket.emit('c:setPlayerReadiness', playerNumber);
 

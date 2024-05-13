@@ -10,7 +10,7 @@ export let state = 'showCanvas';
 
 export async function generateImages(prompt: string, setState = true) {
 	if (setState) state = 'showImage';
-	return await auto1111.txtToImg(prompt, canvas, 'control_v11p_sd15_scribble [d4ba51ff]');
+	return await auto1111.txtToImg(prompt || ' ', canvas, 'control_v11p_sd15_scribble [d4ba51ff]');
 }
 
 export function clearCanvas() {

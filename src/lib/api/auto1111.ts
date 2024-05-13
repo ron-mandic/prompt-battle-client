@@ -57,6 +57,7 @@ export class Automatic1111 {
 		let payload;
 		const url = this.auto1111Url + 'sdapi/v1/txt2img/';
 
+		// Otherwise error will be thrown, i.e. slice is not available but who doesn't write anything?
 		if (_prompt) {
 			this.isProcessing = true;
 			payload = {
