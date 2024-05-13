@@ -36,8 +36,6 @@
 		});
 		socket.on('s:sendPromptBattle', ({ player0, player1 }) => {
 			name = id === '1' ? player0 : player1;
-			console.log('/RESULTS', name, id, mode, prompt); // wefwefwef 1 p null
-
 			if (name === undefined) socket.emit('c:requestEvent', 's:getName');
 		});
 		socket.on('s:getName', (auth) => {
@@ -92,14 +90,10 @@
 
 					switch (message) {
 						case 'round=current': {
-							console.log("I'm here. Current");
-
 							goto(`/prompt?${$page.url.searchParams.toString()}`);
 							break;
 						}
 						case 'round=new': {
-							console.log("I'm here. New");
-
 							goto('/');
 							break;
 						}
