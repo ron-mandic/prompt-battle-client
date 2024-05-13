@@ -16,7 +16,7 @@
 	let refTextarea: HTMLTextAreaElement;
 
 	let id: string | null;
-	let value = '';
+	let value: string;
 	let name: string;
 	let initiated = false;
 
@@ -40,6 +40,12 @@
 			.catch((err) => {
 				console.error(err);
 			});
+	}
+
+	function handleInput(event: InputEvent) {
+		value = (event.target as HTMLTextAreaElement).value;
+
+		socket.emit('c:sendClientPrompt', { id, value });
 	}
 
 	onMount(() => {
@@ -130,9 +136,7 @@
 		class="relative w-full h-full focus:outline-none p-6"
 		maxlength={maxLength}
 		autocorrect="off"
-		on:input={() => {
-			socket.emit('c:sendClientPrompt', { id, value });
-		}}
+		on:input={handleInput}
 		bind:this={refTextarea}
 		bind:value
 	/>
@@ -146,9 +150,11 @@
 		<p
 			id="prompt-length"
 			class="h-[51px] flex items-center"
-			class:full={value.length === maxLength}
+			class:full={value?.length === maxLength}
 		>
-			{(value.length < 10 ? `0${value.length}` : value.length.toString()).padStart(4, '0')} / {maxLength}
+			{value === undefined
+				? 0
+				: (value.length < 10 ? `0${value.length}` : value.length.toString()).padStart(4, '0')} / {maxLength}
 		</p>
 		<div id="prompter" class="px-2">{name || '...'}</div>
 	</div>
