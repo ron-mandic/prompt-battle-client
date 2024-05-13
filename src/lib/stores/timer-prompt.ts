@@ -2,7 +2,7 @@
 
 import { writable } from 'svelte/store';
 
-const COUNTDOWN_FROM = 5 * 1000;
+const COUNTDOWN_FROM = 60 * 1000;
 const formatter = new Intl.DateTimeFormat('en', {
 	hour12: false,
 	minute: '2-digit',

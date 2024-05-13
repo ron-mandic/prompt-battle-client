@@ -55,6 +55,10 @@
 		user-select: none;
 		z-index: 998;
 
+		span {
+			color: var(--color-digits, #6eebea);
+		}
+
 		span.starting {
 			animation: flash 2s infinite;
 		}

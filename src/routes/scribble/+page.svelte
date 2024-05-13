@@ -6,13 +6,9 @@
 	import { generateImages, sketch } from '$lib/ts/functions';
 	import { auto1111Images } from '$lib/stores/auto1111-images';
 	import { promptValue } from '$lib/stores/prompt-value';
+	import { socket } from '$lib/ts/variables';
 	import Counter from '$lib/components/Counter.svelte';
 	import P5 from 'p5-svelte';
-	import { Socket, io } from 'socket.io-client';
-
-	const socket: Socket = io('http://localhost:3000', {
-		reconnection: true
-	});
 
 	let interval: number;
 	let isTriggered = false;

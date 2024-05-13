@@ -83,6 +83,8 @@
 	<div id="prompt-results" class="relative flex justify-center items-center" class:selected>
 		{#if isRedirecting}
 			<Counter
+				seconds={0}
+				--color-digits="transparent"
 				--background-overlay="transparent"
 				end="Carry on!"
 				onEnd={() => {

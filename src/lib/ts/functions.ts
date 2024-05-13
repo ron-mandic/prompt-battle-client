@@ -3,6 +3,8 @@ import { Automatic1111 } from '$lib/api/auto1111';
 import { P5_FRAME_RATE, P5_HEIGHT, P5_WIDTH } from './constants';
 import type { Graphics } from 'p5';
 import { auto1111Process } from '$lib/stores/auto1111-process';
+import { socket } from '$lib/ts/variables';
+import { PUBLIC_ID } from '$env/static/public';
 
 export let canvas: Graphics;
 export let auto1111: Automatic1111;
@@ -12,11 +14,12 @@ export async function generateImages(prompt: string, setState = true) {
 	if (setState) state = 'showImage';
 	return await auto1111.txtToImg(prompt || ' ', canvas, 'control_v11p_sd15_scribble [d4ba51ff]');
 }
-
 export function clearCanvas() {
 	canvas.clear();
 	canvas.background(0);
 }
+
+const arrLines: object[] = [];
 
 export const sketch: Sketch = (p5) => {
 	p5.setup = () => {
@@ -37,6 +40,12 @@ export const sketch: Sketch = (p5) => {
 	};
 
 	p5.draw = () => {
+		p5.frameCount % 60 === 0 &&
+			socket.emit('c:sendCanvasData', {
+				id: PUBLIC_ID,
+				data: arrLines
+			});
+
 		switch (state) {
 			case 'showCanvas': {
 				if (p5.mouseIsPressed) {
@@ -45,6 +54,13 @@ export const sketch: Sketch = (p5) => {
 					canvas.stroke('#6EEBEA');
 					//canvas.ellipse(mouseX, mouseY, 10, 10);
 					canvas.line(p5.mouseX, p5.mouseY, p5.pmouseX, p5.pmouseY);
+
+					arrLines.push({
+						x1: p5.mouseX,
+						y1: p5.mouseY,
+						x2: p5.pmouseX,
+						y2: p5.pmouseY
+					});
 				}
 
 				p5.image(canvas, 0, 0);
