@@ -7,7 +7,13 @@
 	import { auto1111Images } from '$lib/stores/auto1111-images';
 	import { onDestroy, onMount } from 'svelte';
 	import { Socket, io } from 'socket.io-client';
-	import { BATCH_SIZE, NEGATIVE_PROMPT, UNKNOWN, URL_SERVER } from '$lib/ts/constants';
+	import {
+		BATCH_SIZE,
+		NEGATIVE_PROMPT,
+		UNKNOWN,
+		URL_SERVER,
+		URL_SERVER_SD
+	} from '$lib/ts/constants';
 
 	const socket: Socket = io(URL_SERVER, {
 		reconnection: true
@@ -26,7 +32,7 @@
 
 	let uuid: string;
 	let mode: string;
-	const URL = 'https://companion-noble-diving-introducing.trycloudflare.com/sdapi/v1/txt2img/';
+	const URL = `${URL_SERVER_SD}/sdapi/v1/txt2img/`;
 
 	let payload;
 	let requestOptions;
