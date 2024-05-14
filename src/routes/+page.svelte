@@ -93,7 +93,7 @@
 </script>
 
 <svelte:head>
-	<title>AI + D Lab - Prompt Battle</title>
+	<title>/</title>
 </svelte:head>
 
 <div class="w-full max-w-[1419px] m-auto">

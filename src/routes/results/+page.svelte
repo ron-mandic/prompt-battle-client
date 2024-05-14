@@ -76,7 +76,7 @@
 </script>
 
 <svelte:head>
-	<title>Results for {name}</title>
+	<title>Results</title>
 </svelte:head>
 
 <div id="results" class="relative">

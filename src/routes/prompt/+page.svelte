@@ -115,7 +115,7 @@
 </script>
 
 <svelte:head>
-	<title>Prompt by {name}</title>
+	<title>Prompt</title>
 </svelte:head>
 
 <Counter

@@ -73,7 +73,7 @@
 </script>
 
 <svelte:head>
-	<title>Scribble by {name}</title>
+	<title>Scribble</title>
 </svelte:head>
 
 <Counter
