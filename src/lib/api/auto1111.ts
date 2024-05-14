@@ -55,7 +55,8 @@ export class Automatic1111 {
 		}
 
 		let payload;
-		const url = this.auto1111Url + 'sdapi/v1/txt2img/';
+		const url = this.auto1111Url + '/sdapi/v1/txt2img/';
+		console.log(url);
 
 		// Otherwise error will be thrown, i.e. slice is not available but who doesn't write anything?
 		if (_prompt) {
@@ -102,7 +103,7 @@ export class Automatic1111 {
 		if (_img) {
 			img = _img;
 		}
-		const url = this.auto1111Url + 'sdapi/v1/interrogate';
+		const url = this.auto1111Url + '/sdapi/v1/interrogate';
 		let payload;
 
 		if (img) {
@@ -154,7 +155,7 @@ export class Automatic1111 {
 			};
 			// console.log(payload);
 			const i = await this.p5.httpPost(
-				this.auto1111Url + 'controlnet/detect',
+				this.auto1111Url + '/controlnet/detect',
 				'application/json',
 				payload
 			);
@@ -166,7 +167,7 @@ export class Automatic1111 {
 	}
 
 	async getControlnetInfo() {
-		const url = this.auto1111Url + 'controlnet/model_list';
+		const url = this.auto1111Url + '/controlnet/model_list';
 		let test = false;
 
 		const list = await this.p5.httpGet(
@@ -178,7 +179,8 @@ export class Automatic1111 {
 			},
 			function (/* error */) {
 				test = false;
-				alert('not valid url ...');
+				// alert('not valid url ...');
+				console.log(url);
 			}
 		);
 		// console.log(test);

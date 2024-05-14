@@ -3,13 +3,12 @@
 	import { goto } from '$app/navigation';
 	import { onDestroy, onMount } from 'svelte';
 	import { timer, time, isComplete, resetTimer } from '$lib/stores/timer-scribble';
-	import { generateImages, resetArrLines, sketch } from '$lib/ts/functions';
 	import { auto1111Images } from '$lib/stores/auto1111-images';
 	import { promptValue } from '$lib/stores/prompt-value';
 	import { socket } from '$lib/ts/variables';
 	import Counter from '$lib/components/Counter.svelte';
-	import P5 from 'p5-svelte';
 	import { UNKNOWN } from '$lib/ts/constants';
+	import LiveCanvas from '$lib/components/LiveCanvas.svelte';
 
 	let interval: number;
 	let isTriggered = false;
@@ -21,6 +20,8 @@
 	let uuid: string;
 	let dataGUUID: string;
 	let mode: string;
+
+	let liveCanvas: LiveCanvas;
 
 	onMount(() => {
 		id = $page.url.searchParams.get('id')!;
@@ -52,7 +53,6 @@
 
 	onDestroy(() => {
 		resetTimer();
-		resetArrLines();
 	});
 
 	$: if ($isComplete) {
@@ -65,7 +65,8 @@
 			 * This part redirecty immediately to the results page
 			 * This promise gets later resolved in the results page
 			 */
-			auto1111Images.set(generateImages($promptValue));
+			auto1111Images.set(liveCanvas.generateImages($promptValue));
+			// liveCanvas.sayHello();
 			socket.emit('c:sendRoute/scribble', id);
 			goto(`results?id=${id}&uuid=${uuid}&mode=${mode}&guuid=${dataGUUID}`);
 		}, 0); // 2000
@@ -99,7 +100,7 @@
 		class:completed
 		class:jello={isTriggered && !completed}
 	>
-		<P5 {sketch} />
+		<LiveCanvas {socket} bind:this={liveCanvas} />
 	</div>
 	<div id="prompt-footer" class="flex justify-between items-end">
 		<div id="prompt-clock" class="flex flex-col justify-center">
