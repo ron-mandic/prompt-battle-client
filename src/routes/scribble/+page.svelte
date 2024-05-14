@@ -3,12 +3,13 @@
 	import { goto } from '$app/navigation';
 	import { onDestroy, onMount } from 'svelte';
 	import { timer, time, isComplete, resetTimer } from '$lib/stores/timer-scribble';
-	import { generateImages, sketch } from '$lib/ts/functions';
+	import { generateImages, resetArrLines, sketch } from '$lib/ts/functions';
 	import { auto1111Images } from '$lib/stores/auto1111-images';
 	import { promptValue } from '$lib/stores/prompt-value';
 	import { socket } from '$lib/ts/variables';
 	import Counter from '$lib/components/Counter.svelte';
 	import P5 from 'p5-svelte';
+	import { UNKNOWN } from '$lib/ts/constants';
 
 	let interval: number;
 	let isTriggered = false;
@@ -51,6 +52,7 @@
 
 	onDestroy(() => {
 		resetTimer();
+		resetArrLines();
 	});
 
 	$: if ($isComplete) {
@@ -66,7 +68,7 @@
 			auto1111Images.set(generateImages($promptValue));
 			socket.emit('c:sendRoute/scribble', id);
 			goto(`results?id=${id}&uuid=${uuid}&mode=${mode}&guuid=${dataGUUID}`);
-		}, 2000);
+		}, 0); // 2000
 	}
 </script>
 
@@ -83,12 +85,12 @@
 			document.querySelectorAll('.marquee').forEach((marquee) => {
 				marquee.classList.add('fade');
 			});
-		}, 1500);
+		}, 0); // 1500
 	}}
 />
 <div id="scribble" class="relative grid p-4">
 	<div id="prompt-text" class="relative w-full h-[152px] p-4">
-		<p>{$promptValue || ''}</p>
+		<p>{$promptValue || UNKNOWN}</p>
 		<div class="absolute left-0 bottom-0">Prompt</div>
 	</div>
 	<div

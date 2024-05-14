@@ -2,10 +2,12 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { TEXT_H1 } from '$lib/ts/constants';
+	import { TEXT_H1, UNKNOWN, URL_SERVER } from '$lib/ts/constants';
 	import { Socket, io } from 'socket.io-client';
+	// TODO: Uncomment this line when using PUBLIC_ID
+	// import { PUBLIC_ID } from '$env/static/public';
 
-	const socket: Socket = io('http://localhost:3000', {
+	const socket: Socket = io(URL_SERVER, {
 		reconnection: true
 	});
 
@@ -18,13 +20,13 @@
 	let mode: string;
 	let playerName: string;
 	let playerUUID: string;
-	let playerNumber = '?';
+	let playerNumber = UNKNOWN;
 
 	onMount(() => {
 		sessionStorage.clear();
 
 		socket.on('connect', () => {
-			socket.emit('c:initClient');
+			socket.emit('c:initClient' /*, PUBLIC_ID*/);
 		});
 
 		socket.on('s:initClient', ({ id, uuid }) => {
@@ -55,11 +57,37 @@
 		};
 	});
 
+	function handleBlur() {
+		refInput.focus();
+		return false;
+	}
+
+	function handleInput() {
+		refTerminal.style.setProperty('--offset', `${refInput.value.length * 30}px`);
+		playerName = refInput.value;
+		socket.emit('c:setPlayerNames', {
+			id: playerNumber,
+			name: playerName
+		});
+	}
+
+	function handleKeyDown(e: KeyboardEvent) {
+		if (e.key === 'Enter') {
+			if (refInput.value === '') return;
+
+			hasEntered = true;
+			socket.emit('c:setPlayerReadiness', playerNumber);
+
+			// Alternative solution to undefined in scribble and results-views
+			sessionStorage.setItem(playerNumber, playerName);
+		}
+	}
+
 	$: {
 		if (isStarting && mode) {
 			setTimeout(() => {
 				goto(`prompt?id=${playerNumber}&uuid=${playerUUID}&mode=${mode}`);
-			}, 3000);
+			}, 0); // 3000
 		}
 	}
 </script>
@@ -89,37 +117,17 @@
 					maxlength="20"
 					autocomplete="off"
 					autocorrect="off"
-					on:blur={() => {
-						refInput.focus();
-						return false;
-					}}
-					on:input={() => {
-						refTerminal.style.setProperty('--offset', `${refInput.value.length * 30}px`);
-						playerName = refInput.value;
-						socket.emit('c:setPlayerNames', {
-							id: playerNumber,
-							name: playerName
-						});
-					}}
-					on:keydown={(e) => {
-						if (e.key === 'Enter') {
-							if (refInput.value === '') return;
-
-							hasEntered = true;
-							socket.emit('c:setPlayerReadiness', playerNumber);
-
-							// Alternative solution to undefined in scribble and results-views
-							sessionStorage.setItem(playerNumber, playerName);
-						}
-					}}
+					on:blur={handleBlur}
+					on:input={handleInput}
+					on:keydown={handleKeyDown}
 					bind:this={refInput}
 				/>
 			</label>
 		</div>
 		{#if hasEntered && isStarting && mode}
-			<p id="terminal-indicator" class="w-full">starting</p>
+			<p id="terminal-indicator" class="w-full blink ellipsis">Starting</p>
 		{:else if hasEntered}
-			<p id="terminal-indicator" class="w-full">waiting</p>
+			<p id="terminal-indicator" class="w-full ellipsis">Waiting</p>
 		{/if}
 	</section>
 </div>
@@ -185,9 +193,30 @@
 		}
 	}
 
-	// #terminal-indicator {
-	// 	animation: blink 1s infinite;
-	// }
+	#terminal-indicator {
+		&.blink {
+			animation: blink 1s infinite;
+		}
+		&.ellipsis::after {
+			content: '';
+			animation: ellipsis 3s infinite 1s;
+		}
+	}
+
+	@keyframes ellipsis {
+		0% {
+			content: '';
+		}
+		33% {
+			content: '.';
+		}
+		66% {
+			content: '..';
+		}
+		100% {
+			content: '...';
+		}
+	}
 
 	@keyframes slide-in-up {
 		0% {

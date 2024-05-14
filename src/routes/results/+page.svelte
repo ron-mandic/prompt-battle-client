@@ -71,7 +71,7 @@
 			document.querySelectorAll('.marquee').forEach((marquee) => {
 				marquee.classList.add('fade');
 			});
-		}, 1500);
+		}, 0); // 1500
 	});
 </script>
 
@@ -83,13 +83,9 @@
 	<div id="prompt-results" class="relative flex justify-center items-center" class:selected>
 		{#if isRedirecting}
 			<Counter
-				seconds={0}
-				--color-digits="transparent"
-				--background-overlay="transparent"
-				end="Carry on!"
+				seconds={3}
+				end={message === 'round=current' ? 'Carry on!' : "Let's go!"}
 				onEnd={() => {
-					console.log(message);
-
 					switch (message) {
 						case 'round=current': {
 							goto(`/prompt?${$page.url.searchParams.toString()}`);
@@ -123,18 +119,19 @@
 								selectedIndex = +handleImageClick(e);
 								selected = true;
 
+								// Order is highly important otherwise the requests get cut off
+								socket.emit('c:sendImageInfo/results', {
+									id,
+									imageIndex: i
+								});
+								socket.emit('c:sendImage/results', {
+									id,
+									image
+								});
+
 								setTimeout(async () => {
 									visible = true;
 									await tick();
-
-									socket.emit('c:sendImageInfo/results', {
-										id,
-										imageIndex: i
-									});
-									socket.emit('c:sendImage/results', {
-										id,
-										image
-									});
 
 									setTimeout(() => {
 										visible = false;

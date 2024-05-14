@@ -1,6 +1,6 @@
 // TODO: Resolve type errors
 
-import { BATCH_SIZE } from '$lib/ts/constants';
+import { BATCH_SIZE, NEGATIVE_PROMPT } from '$lib/ts/constants';
 import type p5 from 'p5';
 
 export class Automatic1111 {
@@ -62,6 +62,7 @@ export class Automatic1111 {
 			this.isProcessing = true;
 			payload = {
 				prompt: prompt,
+				negative_prompt: NEGATIVE_PROMPT,
 				steps: 20,
 				cfg_scale: 6,
 				width: this.res,
@@ -113,7 +114,7 @@ export class Automatic1111 {
 			};
 			const t = await this.p5.httpPost(url, 'json', payload);
 			this.txt = t.caption;
-			console.log(this.txt);
+			// console.log(this.txt);
 			this.isProcessing = false;
 		} else {
 			console.log('Need an Image ...');
@@ -131,10 +132,10 @@ export class Automatic1111 {
 
 		const controlnetModule = _controlnetModule;
 		for (const model in this.model_list) {
-			console.log(this.model_list[model]);
+			// console.log(this.model_list[model]);
 			if (this.model_list[model].search(controlnetModule) != -1) {
 				this.modelNumber = model;
-				console.log(this.modelNumber);
+				// console.log(this.modelNumber);
 				break;
 			}
 		}
@@ -151,7 +152,7 @@ export class Automatic1111 {
 				model: controlnetModel,
 				controlnet_input_images: [img.canvas.toDataURL().toString()]
 			};
-			console.log(payload);
+			// console.log(payload);
 			const i = await this.p5.httpPost(
 				this.auto1111Url + 'controlnet/detect',
 				'application/json',
@@ -180,12 +181,12 @@ export class Automatic1111 {
 				alert('not valid url ...');
 			}
 		);
-		console.log(test);
+		// console.log(test);
 		this.isReady = test;
 		// @ts-expect-error - TS complains unnecessary comparison
 		if (this.isReady == true) {
 			this.model_list = list.model_list;
-			console.log(this.model_list);
+			// console.log(this.model_list);
 		}
 	}
 }

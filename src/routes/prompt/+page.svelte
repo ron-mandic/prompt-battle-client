@@ -7,9 +7,9 @@
 	import { auto1111Images } from '$lib/stores/auto1111-images';
 	import { onDestroy, onMount } from 'svelte';
 	import { Socket, io } from 'socket.io-client';
-	import { BATCH_SIZE } from '$lib/ts/constants';
+	import { BATCH_SIZE, NEGATIVE_PROMPT, UNKNOWN, URL_SERVER } from '$lib/ts/constants';
 
-	const socket: Socket = io('http://localhost:3000', {
+	const socket: Socket = io(URL_SERVER, {
 		reconnection: true
 	});
 
@@ -83,6 +83,7 @@
 				case 'p': {
 					payload = {
 						prompt: value,
+						negative_prompt: NEGATIVE_PROMPT,
 						steps: 20,
 						cfg_scale: 6,
 						width: 512,
@@ -109,7 +110,7 @@
 				}
 			}
 			socket.emit('c:sendRoute/prompt', id);
-		}, 2000);
+		}, 0); // 2000
 	}
 </script>
 
@@ -126,10 +127,10 @@
 			document.querySelectorAll('.marquee').forEach((marquee) => {
 				marquee.classList.add('fade');
 			});
-		}, 1500);
+		}, 0); // 1500
 	}}
 />
-<div id="prompt" class="relative" data-prompt={dataPrompt}>
+<div id="prompt" class="relative" data-prompt={dataPrompt || UNKNOWN}>
 	<textarea
 		id="prompt-area"
 		name="prompt"

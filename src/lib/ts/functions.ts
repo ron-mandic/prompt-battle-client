@@ -1,6 +1,6 @@
 import type { Sketch } from '$lib/types';
 import { Automatic1111 } from '$lib/api/auto1111';
-import { P5_FRAME_RATE, P5_HEIGHT, P5_WIDTH } from './constants';
+import { CANVAS_SOCKET_EACH_SECONDS, P5_FRAME_RATE, P5_HEIGHT, P5_WIDTH } from './constants';
 import type { Graphics } from 'p5';
 import { auto1111Process } from '$lib/stores/auto1111-process';
 import { socket } from '$lib/ts/variables';
@@ -20,6 +20,9 @@ export function clearCanvas() {
 }
 
 const arrLines: object[] = [];
+export const resetArrLines = () => {
+	arrLines.length = 0;
+};
 
 export const sketch: Sketch = (p5) => {
 	p5.setup = () => {
@@ -40,11 +43,12 @@ export const sketch: Sketch = (p5) => {
 	};
 
 	p5.draw = () => {
-		p5.frameCount % 60 === 0 &&
+		if (arrLines.length > 0 && p5.frameCount % CANVAS_SOCKET_EACH_SECONDS === 0) {
 			socket.emit('c:sendCanvasData', {
 				id: PUBLIC_ID,
 				data: arrLines
 			});
+		}
 
 		switch (state) {
 			case 'showCanvas': {

@@ -1,8 +1,9 @@
 // Credits: https://codesandbox.io/p/sandbox/svelte-countdown-clock-ceo2u
 
+import { TIMER_PROMPT_SECONDS } from '$lib/ts/constants';
 import { writable } from 'svelte/store';
 
-const COUNTDOWN_FROM = 60 * 1000;
+const COUNTDOWN_FROM = TIMER_PROMPT_SECONDS * 1000;
 const formatter = new Intl.DateTimeFormat('en', {
 	hour12: false,
 	minute: '2-digit',
